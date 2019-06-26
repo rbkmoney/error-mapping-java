@@ -106,7 +106,7 @@ public class ErrorMapping {
 
     /**
      * Find by regexp
-     * @deprecated 
+     * @deprecated
      * @param filter      String
      * @return Failure
      */
