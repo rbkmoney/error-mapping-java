@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rbkmoney.damsel.domain.Failure;
+import com.rbkmoney.geck.serializer.kit.tbase.TErrorUtil;
 import com.rbkmoney.woody.api.flow.error.WUnavailableResultException;
 import com.rbkmoney.woody.api.flow.error.WUndefinedResultException;
 
@@ -87,6 +88,7 @@ public class ErrorMapping {
      * Get failure by code and description
      * if code is null check only description and if description is null check only code
      *
+     * @deprecated
      * @param code        String
      * @param description String
      * @return Failure
@@ -105,6 +107,7 @@ public class ErrorMapping {
     /**
      * Get failure by code
      *
+     * @deprecated
      * @param code        String
      * @param description String Used as a reason
      * @return Failure
@@ -130,11 +133,66 @@ public class ErrorMapping {
         return failure;
     }
 
+    public Failure mapFailure(String code){
+        return mapFailure(code, null, null);
+    }
+
+    public Failure mapFailure(String code, String description){
+        return mapFailure(code, description, null);
+    }
+
+    public Failure mapFailure(String code, String description, String state){
+        Objects.requireNonNull(code, "Code must be set");
+        Error error = errors.stream()
+                .filter(e -> matchError(e, code, description, state))
+                .findFirst()
+                .orElseThrow(() -> new ErrorMappingException(
+                        String.format("Error not found. Code %s, description %s, state %s", code, description, state))
+                );
+
+        checkWoodyError(error);
+
+        Failure failure = TErrorUtil.toGeneral(error.getMapping());
+        failure.setReason(prepareReason(code, description));
+        return failure;
+    }
+
+    private boolean matchNullableStrings(String str, String regex) {
+        if (str == null || regex == null) {
+            return true;
+        } else {
+            return str.matches(regex);
+        }
+    }
+
+    private boolean equalsNullableStrings(String str1, String str2) {
+        if (str1 == null || str2 == null) {
+            return true;
+        } else {
+            return str1.equals(str2);
+        }
+    }
+
+    private boolean matchError(Error error, String code, String description, String state) {
+        return code.matches(error.getCodeRegex()) &&
+                matchNullableStrings(description, error.getDescriptionRegex()) &&
+                equalsNullableStrings(state, error.getState());
+    }
+
     /**
+     * @deprecated
      * Validate mapping formate
      */
     public void validateMappingFormat() {
         errors.forEach(error -> StandardError.findByValue(error.getMapping()));
+    }
+
+    public void validateMapping() {
+        errors.forEach(error -> {
+            Objects.requireNonNull(error.getCodeRegex(), "Field 'codeRegex' must be set");
+            Objects.requireNonNull(error.getMapping(), "Field 'mapping' must be set");
+            StandardError.findByValue(error.getMapping());
+        });
     }
 
 
@@ -200,7 +258,7 @@ public class ErrorMapping {
     private void checkWoodyError(Error error) {
 
         if (error == null) {
-            throw new IllegalArgumentException("Error not found " + error);
+            throw new IllegalArgumentException("Error not found");
         }
 
         if (StandardError.RESULT_UNDEFINED.getError().equals(error.getMapping())) {
