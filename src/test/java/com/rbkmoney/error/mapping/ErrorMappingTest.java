@@ -78,6 +78,13 @@ public class ErrorMappingTest {
         assertNotNull(failure);
     }
 
+    @Test
+    public void testGetFailureByCode() {
+        Failure failure = errorMapping.getFailureByCode("203", "used only as a reason");
+        assertNotNull(failure);
+        assertEquals(failure.getReason(), "'203' - 'used only as a reason'");
+    }
+
     @Test(expected = RuntimeException.class)
     public void testUnexpectedException() {
         errorMapping.getFailureByCodeAndDescription("001","Unsupported version");
