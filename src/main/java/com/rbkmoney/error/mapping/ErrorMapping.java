@@ -104,25 +104,6 @@ public class ErrorMapping {
         return failure;
     }
 
-    /**
-     * Get failure by code
-     *
-     * @deprecated
-     * @param code        String
-     * @param description String Used as a reason
-     * @return Failure
-     * @exception IllegalArgumentException if code and description null together.
-     */
-    public Failure getFailureByCode(String code, String description) {
-        Error error = findMatchWithPattern(errors, code, null);
-
-        checkWoodyError(error);
-
-        Failure failure = toGeneral(error.getMapping());
-        failure.setReason(prepareReason(code, description));
-        return failure;
-    }
-
     public Failure getFailureByRegexp(String filter) {
         Error error = findMatchWithPattern(errors, filter);
 
