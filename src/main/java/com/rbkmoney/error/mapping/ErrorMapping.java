@@ -104,6 +104,12 @@ public class ErrorMapping {
         return failure;
     }
 
+    /**
+     * Find by regexp
+     * @deprecated 
+     * @param filter      String
+     * @return Failure
+     */
     public Failure getFailureByRegexp(String filter) {
         Error error = findMatchWithPattern(errors, filter);
 
@@ -141,17 +147,15 @@ public class ErrorMapping {
     private boolean matchNullableStrings(String str, String regex) {
         if (str == null || regex == null) {
             return true;
-        } else {
-            return str.matches(regex);
         }
+        return str.matches(regex);
     }
 
     private boolean equalsNullableStrings(String str1, String str2) {
         if (str1 == null || str2 == null) {
             return true;
-        } else {
-            return str1.equals(str2);
         }
+        return str1.equals(str2);
     }
 
     private boolean matchError(Error error, String code, String description, String state) {
@@ -175,11 +179,6 @@ public class ErrorMapping {
             StandardError.findByValue(error.getMapping());
         });
     }
-
-
-    // ------------------------------------------------------------------------
-    // Private methods
-    // ------------------------------------------------------------------------
 
     /**
      * Find match code or description by pattern
